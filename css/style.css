@@ -1,0 +1,64 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI';
+    background: radial-gradient(circle at top, #0f0f1a, #000);
+    color: #fff;
+}
+
+/* NAVBAR */
+nav {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 40px;
+    background: rgba(0,0,0,0.8);
+    border-bottom: 1px solid #00ffff33;
+}
+
+nav h2 {
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff;
+}
+
+nav a {
+    margin-left: 20px;
+    color: #aaa;
+    text-decoration: none;
+}
+
+nav a:hover {
+    color: #00ffff;
+}
+
+/* GAME CARDS */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 30px;
+}
+
+.card {
+    background: #111;
+    padding: 20px;
+    border-radius: 15px;
+    transition: 0.3s;
+    cursor: pointer;
+    border: 1px solid #00ffff22;
+}
+
+.card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #00ffff;
+}
+
+.card h3 {
+    color: #00ffff;
+}
+
+/* BUTTON */
+.btn {
+    background: #00ffff;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+}
