@@ -1,16 +1,138 @@
-<div class="grid">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Projects — Nocturnal Nomad</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .status-dot {
+      display:inline-block;
+      width:7px; height:7px;
+      border-radius:50%;
+      margin-right:8px;
+      vertical-align:middle;
+    }
+    .dot-active { background:#00ff88; box-shadow:0 0 6px #00ff88; animation:blink 2s infinite; }
+    .dot-wip    { background:#ffaa00; box-shadow:0 0 6px #ffaa00; }
+    .dot-done   { background:#6688ff; box-shadow:0 0 6px #6688ff; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .project-links { display:flex; gap:10px; margin-top:16px; }
+    .tag-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+    .tag {
+      font-family:'Orbitron',monospace;
+      font-size:0.5rem;
+      letter-spacing:2px;
+      padding:3px 8px;
+      border-radius:3px;
+      background:rgba(0,255,255,0.07);
+      border:1px solid rgba(0,255,255,0.15);
+      color:var(--dim);
+      text-transform:uppercase;
+    }
+  </style>
+</head>
+<body>
 
-<div class="card">
-    <h3>🚁 Rescue Drone</h3>
-    <p>10kg payload delivery drone</p>
+<nav>
+  <a href="index.html" class="nav-logo">NOCTURNAL<span style="color:#fff;opacity:0.4">_</span>NOMAD</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Games</a></li>
+    <li><a href="projects.html" class="active">Projects</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+  <div class="hero fade-up" style="text-align:left;padding:0 0 40px;">
+    <div class="section-title">Portfolio</div>
+    <div class="section-heading">Past <span>Projects</span></div>
+  </div>
+
+  <div class="project-grid">
+
+    <div class="project-card fade-up stagger-1">
+      <div class="project-tag"><span class="status-dot dot-active"></span>Active</div>
+      <div class="project-name">🚁 Rescue Drone</div>
+      <div class="project-desc">10kg payload autonomous delivery drone designed for emergency response. Custom flight controller, GPS waypoint navigation, and onboard computer vision for obstacle detection.</div>
+      <div class="tag-row">
+        <span class="tag">Embedded C</span>
+        <span class="tag">PX4</span>
+        <span class="tag">OpenCV</span>
+        <span class="tag">ROS</span>
+      </div>
+      <div class="project-links">
+        <a href="#" class="btn" style="font-size:0.55rem;padding:6px 14px;">View Repo</a>
+      </div>
+    </div>
+
+    <div class="project-card fade-up stagger-2">
+      <div class="project-tag"><span class="status-dot dot-done"></span>Completed</div>
+      <div class="project-name">🤖 Autonomous Line Follower</div>
+      <div class="project-desc">PID-controlled line follower robot capable of navigating complex tracks at high speed. Implemented on STM32 microcontroller with IR sensor array and dual H-bridge motor driver.</div>
+      <div class="tag-row">
+        <span class="tag">STM32</span>
+        <span class="tag">PID</span>
+        <span class="tag">C++</span>
+        <span class="tag">Robotics</span>
+      </div>
+      <div class="project-links">
+        <a href="#" class="btn" style="font-size:0.55rem;padding:6px 14px;">View Repo</a>
+      </div>
+    </div>
+
+    <div class="project-card fade-up stagger-3">
+      <div class="project-tag"><span class="status-dot dot-done"></span>Completed</div>
+      <div class="project-name">🔐 Cybersecurity CTF Event</div>
+      <div class="project-desc">Organized and designed challenges for a campus-wide Capture The Flag cybersecurity competition. Created custom web exploitation, cryptography, and forensics challenges.</div>
+      <div class="tag-row">
+        <span class="tag">CTF</span>
+        <span class="tag">Web Security</span>
+        <span class="tag">Cryptography</span>
+      </div>
+      <div class="project-links">
+        <a href="#" class="btn" style="font-size:0.55rem;padding:6px 14px;">View Details</a>
+      </div>
+    </div>
+
+    <div class="project-card fade-up">
+      <div class="project-tag"><span class="status-dot dot-wip"></span>In Progress</div>
+      <div class="project-name">🖥 FPGA Signal Processor</div>
+      <div class="project-desc">Real-time digital signal processing on FPGA using VHDL. Implementing FIR/IIR filters, FFT analysis, and hardware-accelerated DSP pipeline for audio applications.</div>
+      <div class="tag-row">
+        <span class="tag">VHDL</span>
+        <span class="tag">Vivado</span>
+        <span class="tag">DSP</span>
+        <span class="tag">FPGA</span>
+      </div>
+      <div class="project-links">
+        <a href="#" class="btn" style="font-size:0.55rem;padding:6px 14px;">View Repo</a>
+      </div>
+    </div>
+
+    <div class="project-card fade-up">
+      <div class="project-tag"><span class="status-dot dot-wip"></span>In Progress</div>
+      <div class="project-name">🎮 Nocturnal Nomad Game Hub</div>
+      <div class="project-desc">This website — a full browser-based game platform built with vanilla HTML, CSS, and JS. Hosted on GitHub Pages with Cloudflare CDN and custom domain.</div>
+      <div class="tag-row">
+        <span class="tag">HTML/CSS/JS</span>
+        <span class="tag">GitHub Pages</span>
+        <span class="tag">Cloudflare</span>
+      </div>
+      <div class="project-links">
+        <a href="https://github.com" target="_blank" class="btn" style="font-size:0.55rem;padding:6px 14px;">GitHub</a>
+      </div>
+    </div>
+
+    <!-- Placeholder card -->
+    <div class="project-card fade-up" style="border-style:dashed;opacity:0.4;">
+      <div class="project-tag">Your Next Project</div>
+      <div class="project-name">🚀 Coming Soon</div>
+      <div class="project-desc">Something amazing is being built. Check back later.</div>
+    </div>
+
+  </div>
 </div>
 
-<div class="card">
-    <h3>🤖 Line Follower</h3>
-</div>
-
-<div class="card">
-    <h3>🔐 Cybersecurity Event</h3>
-</div>
-
-</div>
+</body>
+</html>
