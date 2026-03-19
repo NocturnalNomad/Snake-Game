@@ -7,70 +7,39 @@
 
 <body>
 
-<!-- NAVBAR -->
 <nav>
     <h2>NocturnalNomad</h2>
-    <ul>
-        <li><a href="index.html">Games</a></li>
-        <li><a href="projects.html">Projects</a></li>
-        <li><a href="contact.html">Contact</a></li>
-    </ul>
+    <div>
+        <a href="index.html">Games</a>
+        <a href="projects.html">Projects</a>
+        <a href="contact.html">Contact</a>
+    </div>
 </nav>
 
-<!-- CONTENT -->
-<div class="container">
+<h1 style="padding:20px;">🎮 Game Hub</h1>
 
-<h1>🎮 Game Library</h1>
+<div class="grid">
 
-<h2>🧩 Puzzle Games</h2>
-<ul>
-    <li>Tetris</li>
-    <li>2048</li>
-    <li>Sudoku</li>
-    <li>Nonograms (Picross)</li>
-    <li>Sliding Puzzle</li>
-</ul>
+<div class="card" onclick="openGame('games/snake.html')">
+    <h3>🐍 Snake</h3>
+    <p>Classic hungry snake</p>
+</div>
 
-<h2>🧠 Logic & Strategy</h2>
-<ul>
-    <li>Chess</li>
-    <li>Checkers</li>
-    <li>Minesweeper</li>
-    <li>Tic Tac Toe</li>
-    <li>Memory Card Game</li>
-</ul>
+<div class="card" onclick="openGame('games/tetris.html')">
+    <h3>🧱 Tetris</h3>
+</div>
 
-<h2>🕹 Arcade Classics</h2>
-<ul>
-    <li>Pong</li>
-    <li>Breakout</li>
-    <li>Space Invaders</li>
-    <li>Pac-Man</li>
-    <li>Asteroids</li>
-    <li>Frogger</li>
-    <li>Galaga</li>
-    <li>Donkey Kong</li>
-    <li>Centipede</li>
-    <li>Missile Command</li>
-</ul>
+<div class="card">
+    <h3>🧠 Sudoku</h3>
+</div>
 
-<h2>🐍 Casual Games</h2>
-<ul>
-    <li>Snake / Hungry Snake</li>
-    <li>Number Guessing Game</li>
-    <li>Quiz / Trivia</li>
-    <li>Incremental / Clicker</li>
-</ul>
-
-<h2>🧙 Text & Retro</h2>
-<ul>
-    <li>Hangman</li>
-    <li>Wordle</li>
-    <li>Text Adventure</li>
-    <li>ASCII Roguelikes</li>
-</ul>
+<div class="card">
+    <h3>♟ Chess</h3>
+</div>
 
 </div>
+
+<script src="js/main.js"></script>
 
 </body>
 </html>
