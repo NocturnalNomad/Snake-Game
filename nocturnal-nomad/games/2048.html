@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>2048 — Nocturnal Nomad</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    body { display:flex; flex-direction:column; align-items:center; }
+    .board-wrap { position:relative; }
+    #board {
+      display:grid;
+      grid-template-columns:repeat(4,90px);
+      grid-template-rows:repeat(4,90px);
+      gap:8px;
+      background:rgba(0,255,255,0.05);
+      border:1px solid var(--card-border);
+      border-radius:12px;
+      padding:12px;
+    }
+    .tile {
+      width:90px; height:90px;
+      display:flex; align-items:center; justify-content:center;
+      border-radius:8px;
+      font-family:'Orbitron',monospace;
+      font-weight:900;
+      font-size:1.4rem;
+      transition: all 0.1s;
+      border: 1px solid transparent;
+    }
+    .tile-0 { background:rgba(0,255,255,0.04); border-color:rgba(0,255,255,0.08); }
+    .tile-2 { background:rgba(0,255,255,0.1); border-color:rgba(0,255,255,0.3); color:#00ffff; text-shadow:0 0 10px #00ffff; }
+    .tile-4 { background:rgba(0,200,255,0.15); border-color:rgba(0,200,255,0.4); color:#00c8ff; text-shadow:0 0 10px #00c8ff; }
+    .tile-8 { background:rgba(0,100,255,0.2); border-color:rgba(0,100,255,0.5); color:#6688ff; text-shadow:0 0 10px #6688ff; }
+    .tile-16 { background:rgba(100,0,255,0.2); border-color:rgba(100,0,255,0.5); color:#aa44ff; text-shadow:0 0 12px #aa44ff; font-size:1.2rem; }
+    .tile-32 { background:rgba(200,0,255,0.2); border-color:rgba(200,0,255,0.5); color:#ff00ff; text-shadow:0 0 12px #ff00ff; font-size:1.1rem; }
+    .tile-64 { background:rgba(255,0,200,0.2); border-color:rgba(255,0,200,0.5); color:#ff00cc; text-shadow:0 0 14px #ff00cc; font-size:1rem; }
+    .tile-128 { background:rgba(255,0,100,0.2); border-color:rgba(255,0,100,0.5); color:#ff3366; text-shadow:0 0 14px #ff3366; font-size:0.95rem; }
+    .tile-256 { background:rgba(255,60,0,0.2); border-color:rgba(255,60,0,0.5); color:#ff6600; text-shadow:0 0 14px #ff6600; font-size:0.9rem; }
+    .tile-512 { background:rgba(255,180,0,0.2); border-color:rgba(255,180,0,0.5); color:#ffaa00; text-shadow:0 0 16px #ffaa00; font-size:0.85rem; }
+    .tile-1024 { background:rgba(255,255,0,0.2); border-color:rgba(255,255,0,0.5); color:#ffff00; text-shadow:0 0 18px #ffff00; font-size:0.75rem; }
+    .tile-2048 { background:rgba(0,255,136,0.25); border-color:rgba(0,255,136,0.7); color:#00ff88; text-shadow:0 0 20px #00ff88; font-size:0.7rem; animation:pulse 0.5s ease; }
+    @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="nav-logo">NOCTURNAL<span style="color:#fff;opacity:0.4">_</span>NOMAD</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Games</a></li>
+    <li><a href="../projects.html">Projects</a></li>
+    <li><a href="../contact.html">Contact</a></li>
+  </ul>
+</nav>
+
+<div class="game-page">
+  <div class="score-bar" style="width:420px;">
+    <span class="score-label">SCORE</span>
+    <span class="score-val" id="scoreEl">0</span>
+    <span class="score-label">BEST</span>
+    <span class="score-val" id="bestEl">0</span>
+    <button class="btn" onclick="init()" style="font-size:0.6rem;padding:6px 14px;">NEW GAME</button>
+  </div>
+
+  <div class="board-wrap">
+    <div id="board"></div>
+    <div class="overlay" id="overlay" style="border-radius:12px;">
+      <h2 id="overlayTitle">2048</h2>
+      <p id="overlayMsg">Reach 2048 to win</p>
+      <button class="btn primary" onclick="startGame()">START</button>
+    </div>
+  </div>
+
+  <div class="game-controls" style="margin-top:16px;">Arrow Keys or WASD to slide tiles</div>
+
+  <div class="leaderboard" style="max-width:420px;">
+    <div class="lb-title">🏆 Top Scores</div>
+    <div id="leaderboard"></div>
+  </div>
+</div>
+
+<script>
+let grid, score, gameOver2, won;
+
+function init(){
+  grid = Array.from({length:4},()=>Array(4).fill(0));
+  score=0; gameOver2=false; won=false;
+  addRandom(); addRandom();
+  render();
+  updateUI();
+}
+
+function startGame(){
+  document.getElementById('overlay').style.display='none';
+  init();
+}
+
+function addRandom(){
+  const empty=[];
+  grid.forEach((r,ri)=>r.forEach((v,ci)=>{if(!v) empty.push([ri,ci]);}));
+  if(!empty.length) return;
+  const [r,c]=empty[Math.floor(Math.random()*empty.length)];
+  grid[r][c]=Math.random()<0.9?2:4;
+}
+
+function slide(row){
+  let arr=row.filter(v=>v), merged=false, gained=0;
+  for(let i=0;i<arr.length-1;i++){
+    if(arr[i]===arr[i+1]&&!merged){
+      arr[i]*=2; gained+=arr[i]; arr.splice(i+1,1); merged=true;
+    } else { merged=false; }
+  }
+  while(arr.length<4) arr.push(0);
+  return {arr,gained};
+}
+
+function move(dir){
+  if(gameOver2) return;
+  let moved=false;
+  let totalGained=0;
+
+  for(let r=0;r<4;r++){
+    for(let c=0;c<4;c++){
+      let row;
+      if(dir==='left') row=grid[r];
+      else if(dir==='right') row=[...grid[r]].reverse();
+      else if(dir==='up') row=[grid[0][c],grid[1][c],grid[2][c],grid[3][c]];
+      else row=[grid[3][c],grid[2][c],grid[1][c],grid[0][c]];
+
+      if(dir==='left'||dir==='right'){
+        const {arr,gained}=slide(row);
+        if(dir==='right') arr.reverse();
+        if(arr.some((v,i)=>v!==grid[r][i])) moved=true;
+        grid[r]=arr; totalGained+=gained;
+        break;
+      } else if(c===0){
+        break;
+      }
+    }
+  }
+
+  // Handle up/down differently to avoid re-looping
+  if(dir==='up'||dir==='down'){
+    for(let c=0;c<4;c++){
+      let col=[grid[0][c],grid[1][c],grid[2][c],grid[3][c]];
+      if(dir==='down') col.reverse();
+      const {arr,gained}=slide(col);
+      if(dir==='down') arr.reverse();
+      totalGained+=gained;
+      for(let r=0;r<4;r++){
+        if(arr[r]!==grid[r][c]) moved=true;
+        grid[r][c]=arr[r];
+      }
+    }
+  }
+
+  if(moved){
+    score+=totalGained;
+    addRandom();
+    render();
+    updateUI();
+    checkEnd();
+  }
+}
+
+function checkEnd(){
+  // Win
+  if(!won && grid.some(r=>r.includes(2048))){
+    won=true;
+    setTimeout(()=>{
+      if(confirm('🎉 You reached 2048! Keep going?')) {}
+    },100);
+  }
+  // Lose
+  for(let r=0;r<4;r++){
+    for(let c=0;c<4;c++){
+      if(!grid[r][c]) return;
+      if(c<3&&grid[r][c]===grid[r][c+1]) return;
+      if(r<3&&grid[r][c]===grid[r+1][c]) return;
+    }
+  }
+  gameOver2=true;
+  saveScore(score);
+  document.getElementById('overlayTitle').textContent='GAME OVER';
+  document.getElementById('overlayMsg').textContent='Score: '+score;
+  document.getElementById('overlay').querySelector('button').textContent='PLAY AGAIN';
+  document.getElementById('overlay').style.display='flex';
+  renderLeaderboard();
+}
+
+function updateUI(){
+  document.getElementById('scoreEl').textContent=score;
+  const best=JSON.parse(localStorage.getItem('2048_scores')||'[]')[0]||0;
+  document.getElementById('bestEl').textContent=Math.max(best,score);
+}
+
+function saveScore(s){
+  let arr=JSON.parse(localStorage.getItem('2048_scores')||'[]');
+  arr.push(s); arr.sort((a,b)=>b-a); arr=arr.slice(0,5);
+  localStorage.setItem('2048_scores',JSON.stringify(arr));
+}
+
+function renderLeaderboard(){
+  const arr=JSON.parse(localStorage.getItem('2048_scores')||'[]');
+  document.getElementById('leaderboard').innerHTML=arr.length
+    ?arr.map((s,i)=>`<div class="lb-entry"><span class="lb-rank">#${i+1}</span><span class="lb-score">${s}</span></div>`).join('')
+    :'<div class="lb-entry"><span class="lb-rank">No scores yet</span></div>';
+}
+
+function render(){
+  const board=document.getElementById('board');
+  board.innerHTML='';
+  grid.forEach(row=>row.forEach(val=>{
+    const div=document.createElement('div');
+    div.className=`tile tile-${val<=2048?val:2048}`;
+    div.textContent=val||'';
+    board.appendChild(div);
+  }));
+}
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  const map={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',
+             a:'left',d:'right',w:'up',s:'down',A:'left',D:'right',W:'up',S:'down'};
+  const d=map[e.key];
+  if(d){ move(d); e.preventDefault(); }
+});
+
+// Touch swipe
+let tx,ty;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx;
+  const dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>Math.abs(dy)){
+    move(dx>0?'right':'left');
+  } else {
+    move(dy>0?'down':'up');
+  }
+},{passive:true});
+
+renderLeaderboard();
+</script>
+</body>
+</html>
