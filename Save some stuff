@@ -1,0 +1,20 @@
+nocturnal-nomad
+│
+├── index.html          (home dashboard)
+├── games/
+│   ├── snake.html
+│   ├── tetris.html
+│   └── ...
+│
+├── projects.html
+├── contact.html
+│
+├── css/
+│   └── style.css
+│
+├── js/
+│   ├── main.js
+│   └── leaderboard.js
+│
+└── data/
+    └── scores.json (optional future)
