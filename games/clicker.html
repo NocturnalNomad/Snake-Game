@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Clicker — Nocturnal Nomad</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/cursor.css"/>
+  <style>
+    body { display:flex; flex-direction:column; align-items:center; }
+
+    .clicker-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr 260px;
+      gap: 24px;
+      width: 100%;
+      max-width: 960px;
+      margin-top: 30px;
+    }
+
+    /* ── LEFT: stats ── */
+    .stats-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .stat-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    .stat-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 3px;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .stat-val {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--cyan);
+      text-shadow: 0 0 10px var(--cyan);
+    }
+
+    .stat-sub {
+      font-size: 0.75rem;
+      color: var(--dim);
+      margin-top: 2px;
+    }
+
+    /* ── CENTER: click button ── */
+    .center-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    #clickBtn {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, rgba(0,255,255,0.25), rgba(0,255,255,0.05));
+      border: 2px solid rgba(0,255,255,0.4);
+      color: var(--cyan);
+      font-family: 'Orbitron', monospace;
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      cursor: none;
+      transition: transform 0.08s, box-shadow 0.08s;
+      box-shadow: 0 0 30px rgba(0,255,255,0.15), inset 0 0 30px rgba(0,255,255,0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    #clickBtn:active {
+      transform: scale(0.93);
+      box-shadow: 0 0 50px rgba(0,255,255,0.35), inset 0 0 20px rgba(0,255,255,0.1);
+    }
+
+    #clickBtn .btn-icon { font-size: 2.5rem; margin-bottom: 8px; }
+
+    .float-text {
+      position: fixed;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--cyan);
+      text-shadow: 0 0 10px var(--cyan);
+      pointer-events: none;
+      z-index: 9999;
+      animation: floatUp 0.9s ease forwards;
+    }
+
+    @keyframes floatUp {
+      0%   { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-60px); }
+    }
+
+    .milestone {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      color: var(--yellow);
+      text-align: center;
+      min-height: 20px;
+    }
+
+    /* ── RIGHT: upgrades ── */
+    .upgrades-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .panel-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 4px;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .upgrade-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      cursor: none;
+      transition: all 0.2s;
+      text-align: left;
+      width: 100%;
+    }
+
+    .upgrade-btn:hover:not(:disabled) {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0,255,255,0.15);
+    }
+
+    .upgrade-btn:disabled {
+      opacity: 0.35;
+    }
+
+    .upg-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .upg-desc {
+      font-size: 0.72rem;
+      color: var(--dim);
+      margin-bottom: 6px;
+    }
+
+    .upg-cost {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.65rem;
+      color: var(--cyan);
+    }
+
+    .upg-count {
+      float: right;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      color: var(--green);
+    }
+
+    /* prestige */
+    #prestigeBtn {
+      margin-top: 10px;
+      background: rgba(255,0,255,0.08);
+      border: 1px solid rgba(255,0,255,0.3);
+      border-radius: 8px;
+      padding: 12px;
+      color: #ff00ff;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      cursor: none;
+      width: 100%;
+      transition: all 0.2s;
+      text-shadow: 0 0 8px #ff00ff;
+    }
+
+    #prestigeBtn:hover:not(:disabled) {
+      background: rgba(255,0,255,0.15);
+      box-shadow: 0 0 16px rgba(255,0,255,0.2);
+    }
+
+    #prestigeBtn:disabled { opacity: 0.25; }
+
+    @media(max-width: 800px) {
+      .clicker-layout { grid-template-columns: 1fr; }
+      .center-panel { order: -1; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="nav-logo">NOCTURNAL<span style="color:#fff;opacity:0.4">_</span>NOMAD</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Games</a></li>
+    <li><a href="../projects.html">Projects</a></li>
+    <li><a href="../contact.html">Contact</a></li>
+  </ul>
+</nav>
+
+<div class="game-page" style="width:100%;padding:30px 20px;">
+  <div class="clicker-layout">
+
+    <!-- LEFT STATS -->
+    <div class="stats-panel">
+      <div class="stat-box">
+        <div class="stat-label">Bits</div>
+        <div class="stat-val" id="bitsDisplay">0</div>
+        <div class="stat-sub" id="totalDisplay">Total: 0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Per Click</div>
+        <div class="stat-val" id="cpsDisplay">1</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Per Second</div>
+        <div class="stat-val" id="autoDisplay">0</div>
+        <div class="stat-sub" id="prestigeDisplay">Prestige × 1</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Clicks</div>
+        <div class="stat-val" id="clickCountDisplay">0</div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="center-panel">
+      <div class="milestone" id="milestone">Click the orb to start</div>
+      <button id="clickBtn" onclick="handleClick(event)">
+        <span class="btn-icon">⚡</span>
+        CLICK
+      </button>
+      <div style="font-size:0.75rem;color:var(--dim);letter-spacing:2px;font-family:'Orbitron',monospace;">BITS</div>
+    </div>
+
+    <!-- RIGHT UPGRADES -->
+    <div class="upgrades-panel">
+      <div class="panel-title">Upgrades</div>
+      <div id="upgradeList"></div>
+      <button id="prestigeBtn" onclick="prestige()" disabled>⬆ PRESTIGE (need 1M bits)</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="../js/cursor.js"></script>
+<script>
+const UPGRADES = [
+  { id:'cursor',   name:'⚡ Auto Clicker',   desc:'Clicks once/sec automatically', baseCost:15,   bps:1,   cpc:0 },
+  { id:'script',   name:'📜 Script',          desc:'+1 per click',                  baseCost:50,   bps:0,   cpc:1 },
+  { id:'bot',      name:'🤖 Bot Farm',        desc:'5 bits/sec',                    baseCost:200,  bps:5,   cpc:0 },
+  { id:'gpu',      name:'🖥 GPU Miner',       desc:'20 bits/sec',                   baseCost:800,  bps:20,  cpc:0 },
+  { id:'algo',     name:'🧠 Algorithm',       desc:'+10 per click',                 baseCost:2000, bps:0,   cpc:10 },
+  { id:'server',   name:'🌐 Server Rack',     desc:'100 bits/sec',                  baseCost:8000, bps:100, cpc:0 },
+  { id:'ai',       name:'🧬 Neural Net',      desc:'500 bits/sec',                  baseCost:50000,bps:500, cpc:0 },
+  { id:'quantum',  name:'⚛ Quantum Core',    desc:'+100 per click',                baseCost:100000,bps:0,  cpc:100},
+];
+
+const MILESTONES = [
+  [100,'First 100 bits!'], [1000,'Kilobit reached!'], [10000,'10K bits!'],
+  [100000,'100K bits!'], [1000000,'1 MILLION bits! Prestige?'],
+];
+
+let bits = 0, totalBits = 0, clickCount = 0, prestigeMulti = 1;
+let bitsPerClick = 1, bitsPerSec = 0;
+let counts = {};
+UPGRADES.forEach(u => counts[u.id] = 0);
+
+let lastMilestone = -1;
+
+function fmt(n) {
+  if(n >= 1e9) return (n/1e9).toFixed(2)+'B';
+  if(n >= 1e6) return (n/1e6).toFixed(2)+'M';
+  if(n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return Math.floor(n).toString();
+}
+
+function handleClick(e) {
+  const gain = bitsPerClick * prestigeMulti;
+  bits += gain;
+  totalBits += gain;
+  clickCount++;
+
+  // Floating text
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.textContent = '+' + fmt(gain);
+  el.style.left = (e.clientX - 20) + 'px';
+  el.style.top  = (e.clientY - 10) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 900);
+
+  updateUI();
+  checkMilestones();
+}
+
+function getCost(u) {
+  return Math.floor(u.baseCost * Math.pow(1.15, counts[u.id]));
+}
+
+function buyUpgrade(id) {
+  const u = UPGRADES.find(x => x.id === id);
+  const cost = getCost(u);
+  if(bits < cost) return;
+  bits -= cost;
+  counts[u.id]++;
+  bitsPerClick = 1 + UPGRADES.reduce((s,x)=>s + x.cpc * counts[x.id],0);
+  bitsPerSec   = UPGRADES.reduce((s,x)=>s + x.bps * counts[x.id],0);
+  renderUpgrades();
+  updateUI();
+}
+
+function prestige() {
+  if(totalBits < 1000000) return;
+  prestigeMulti *= 2;
+  bits = 0; totalBits = 0; clickCount = 0;
+  bitsPerClick = 1; bitsPerSec = 0;
+  UPGRADES.forEach(u => counts[u.id] = 0);
+  lastMilestone = -1;
+  renderUpgrades();
+  updateUI();
+  document.getElementById('milestone').textContent = '✨ Prestige! Multiplier ×'+prestigeMulti;
+}
+
+function updateUI() {
+  document.getElementById('bitsDisplay').textContent = fmt(bits);
+  document.getElementById('totalDisplay').textContent = 'Total: '+fmt(totalBits);
+  document.getElementById('cpsDisplay').textContent = fmt(bitsPerClick * prestigeMulti);
+  document.getElementById('autoDisplay').textContent = fmt(bitsPerSec * prestigeMulti)+'/s';
+  document.getElementById('clickCountDisplay').textContent = fmt(clickCount);
+  document.getElementById('prestigeDisplay').textContent = 'Prestige ×'+prestigeMulti;
+  document.getElementById('prestigeBtn').disabled = totalBits < 1000000;
+
+  document.querySelectorAll('.upgrade-btn').forEach(btn => {
+    const u = UPGRADES.find(x=>x.id===btn.dataset.id);
+    const cost = getCost(u);
+    btn.disabled = bits < cost;
+    btn.querySelector('.upg-cost').textContent = '⚡ '+fmt(cost)+' bits';
+    btn.querySelector('.upg-count').textContent = 'x'+counts[u.id];
+  });
+}
+
+function renderUpgrades() {
+  const list = document.getElementById('upgradeList');
+  list.innerHTML = UPGRADES.map(u => `
+    <button class="upgrade-btn" data-id="${u.id}" onclick="buyUpgrade('${u.id}')">
+      <div class="upg-name">${u.name} <span class="upg-count">x${counts[u.id]}</span></div>
+      <div class="upg-desc">${u.desc}</div>
+      <div class="upg-cost">⚡ ${fmt(getCost(u))} bits</div>
+    </button>
+  `).join('');
+}
+
+function checkMilestones() {
+  for(let i=MILESTONES.length-1;i>=0;i--){
+    if(totalBits >= MILESTONES[i][0] && lastMilestone < i){
+      lastMilestone = i;
+      document.getElementById('milestone').textContent = '🎉 '+MILESTONES[i][1];
+      break;
+    }
+  }
+}
+
+// Auto tick
+setInterval(()=>{
+  const gain = bitsPerSec * prestigeMulti / 20;
+  bits += gain;
+  totalBits += gain;
+  updateUI();
+}, 50);
+
+renderUpgrades();
+updateUI();
+</script>
+</body>
+</html>

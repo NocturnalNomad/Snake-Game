@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Number Guess — Nocturnal Nomad</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/cursor.css"/>
+  <style>
+    body { display:flex; flex-direction:column; align-items:center; }
+    .guess-wrap {
+      max-width: 480px;
+      width: 100%;
+      margin-top: 30px;
+    }
+    .difficulty-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      justify-content: center;
+    }
+    .diff-btn {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      padding: 8px 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: var(--dim);
+      cursor: none;
+      transition: all 0.2s;
+    }
+    .diff-btn.active, .diff-btn:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      text-shadow: 0 0 8px var(--cyan);
+    }
+
+    .range-display {
+      text-align: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      color: var(--dim);
+      margin-bottom: 24px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .input-row input {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      color: #fff;
+      font-family: 'Orbitron', monospace;
+      font-size: 1.4rem;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-row input:focus { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,255,255,0.1); }
+
+    .feedback-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.3s;
+    }
+
+    .feedback-icon { font-size: 2rem; margin-bottom: 8px; }
+    .feedback-text {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+    .feedback-hint { font-size: 0.75rem; color: var(--dim); margin-top: 6px; letter-spacing: 1px; }
+
+    .feedback-box.high  { border-color: rgba(255,100,0,0.5); }
+    .feedback-box.low   { border-color: rgba(0,100,255,0.5); }
+    .feedback-box.win   { border-color: var(--green); box-shadow: 0 0 20px rgba(0,255,136,0.15); }
+    .feedback-box.lose  { border-color: rgba(255,0,80,0.5); }
+
+    .guesses-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+      min-height: 36px;
+    }
+
+    .guess-chip {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.65rem;
+      padding: 5px 10px;
+      border-radius: 4px;
+      border: 1px solid;
+    }
+
+    .chip-high { border-color: rgba(255,100,0,0.4); color: #ff8844; background: rgba(255,100,0,0.08); }
+    .chip-low  { border-color: rgba(0,100,255,0.4); color: #6688ff; background: rgba(0,100,255,0.08); }
+
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .mini-stat {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .mini-stat .lbl { font-family:'Orbitron',monospace; font-size:0.5rem; letter-spacing:3px; color:var(--dim); margin-bottom:4px; }
+    .mini-stat .val { font-family:'Orbitron',monospace; font-size:1rem; color:var(--cyan); text-shadow:0 0 8px var(--cyan); }
+
+    .bar-wrap {
+      background: rgba(0,255,255,0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      height: 6px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--magenta));
+      border-radius: 6px;
+      transition: width 0.3s;
+      box-shadow: 0 0 8px var(--cyan);
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="nav-logo">NOCTURNAL<span style="color:#fff;opacity:0.4">_</span>NOMAD</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Games</a></li>
+    <li><a href="../projects.html">Projects</a></li>
+    <li><a href="../contact.html">Contact</a></li>
+  </ul>
+</nav>
+
+<div class="game-page">
+  <div class="guess-wrap">
+
+    <div style="text-align:center;margin-bottom:24px;">
+      <div class="section-title">Brain Teaser</div>
+      <div class="section-heading" style="font-size:1.6rem;">NUMBER <span>GUESS</span></div>
+    </div>
+
+    <div class="difficulty-row">
+      <button class="diff-btn active" onclick="setDiff('easy',this)">EASY</button>
+      <button class="diff-btn" onclick="setDiff('medium',this)">MEDIUM</button>
+      <button class="diff-btn" onclick="setDiff('hard',this)">HARD</button>
+      <button class="diff-btn" onclick="setDiff('extreme',this)">EXTREME</button>
+    </div>
+
+    <div class="range-display" id="rangeDisplay">Guess between 1 and 50 — 8 attempts</div>
+
+    <div class="stats-row">
+      <div class="mini-stat"><div class="lbl">Attempts</div><div class="val" id="attemptDisplay">0 / 8</div></div>
+      <div class="mini-stat"><div class="lbl">Wins</div><div class="val" id="winsDisplay">0</div></div>
+      <div class="mini-stat"><div class="lbl">Best</div><div class="val" id="bestDisplay">—</div></div>
+    </div>
+
+    <div class="bar-wrap"><div class="bar-fill" id="attemptBar" style="width:0%"></div></div>
+
+    <div class="feedback-box" id="feedbackBox">
+      <div class="feedback-icon" id="feedbackIcon">🎯</div>
+      <div class="feedback-text" id="feedbackText">Enter a number and press Guess</div>
+    </div>
+
+    <div class="guesses-row" id="guessesRow"></div>
+
+    <div class="input-row">
+      <input type="number" id="guessInput" placeholder="?" min="1" onkeydown="if(event.key==='Enter')submitGuess()"/>
+      <button class="btn primary" onclick="submitGuess()">GUESS</button>
+    </div>
+
+    <button class="btn" onclick="newGame()" style="width:100%;margin-top:4px;">NEW GAME</button>
+  </div>
+</div>
+
+<script src="../js/cursor.js"></script>
+<script>
+const DIFFS = {
+  easy:    { max:50,   attempts:8 },
+  medium:  { max:100,  attempts:7 },
+  hard:    { max:500,  attempts:8 },
+  extreme: { max:1000, attempts:7 },
+};
+
+let diff = 'easy';
+let secret, attempts, maxAttempts, maxNum, guesses, wins, best, gameOver;
+wins = parseInt(localStorage.getItem('numguess_wins')||'0');
+best = parseInt(localStorage.getItem('numguess_best')||'999');
+
+function setDiff(d, btn) {
+  diff = d;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  newGame();
+}
+
+function newGame() {
+  const cfg = DIFFS[diff];
+  maxNum = cfg.max;
+  maxAttempts = cfg.attempts;
+  secret = Math.floor(Math.random()*maxNum)+1;
+  attempts = 0;
+  guesses = [];
+  gameOver = false;
+
+  document.getElementById('rangeDisplay').textContent = `Guess between 1 and ${maxNum} — ${maxAttempts} attempts`;
+  document.getElementById('guessInput').value = '';
+  document.getElementById('guessInput').disabled = false;
+  document.getElementById('guessesRow').innerHTML = '';
+  document.getElementById('attemptBar').style.width = '0%';
+  setFeedback('🎯','Enter a number and press Guess','',false);
+  updateStats();
+  document.getElementById('guessInput').focus();
+}
+
+function submitGuess() {
+  if(gameOver) return;
+  const val = parseInt(document.getElementById('guessInput').value);
+  if(isNaN(val)||val<1||val>maxNum) {
+    setFeedback('⚠','Invalid number — try again within range','',false);
+    return;
+  }
+
+  attempts++;
+  guesses.push({val, dir: val > secret ? 'high' : val < secret ? 'low' : 'win'});
+  renderChips();
+  updateStats();
+
+  const pct = (attempts/maxAttempts)*100;
+  document.getElementById('attemptBar').style.width = pct+'%';
+  document.getElementById('guessInput').value = '';
+
+  if(val === secret) {
+    wins++;
+    if(attempts < best) best = attempts;
+    localStorage.setItem('numguess_wins', wins);
+    localStorage.setItem('numguess_best', best);
+    setFeedback('🎉','CORRECT!',`${secret} — solved in ${attempts} attempt${attempts>1?'s':''}`,true,'win');
+    gameOver = true;
+    document.getElementById('guessInput').disabled = true;
+    updateStats();
+    return;
+  }
+
+  if(attempts >= maxAttempts) {
+    setFeedback('💀','OUT OF ATTEMPTS',`The number was ${secret}`,'','lose');
+    gameOver = true;
+    document.getElementById('guessInput').disabled = true;
+    return;
+  }
+
+  const diff2 = Math.abs(val - secret);
+  let hint = val > secret ? '📉 Too high!' : '📈 Too low!';
+  let warmth = diff2 < maxNum*0.05 ? '🔥 Very hot!' : diff2 < maxNum*0.1 ? '♨ Hot' : diff2 < maxNum*0.25 ? '😐 Warm' : '🧊 Cold';
+  const cls = val > secret ? 'high' : 'low';
+  setFeedback(val>secret?'⬇':'⬆', hint, `${warmth} — ${maxAttempts-attempts} attempt${maxAttempts-attempts!==1?'s':''} left`, '', cls);
+}
+
+function setFeedback(icon,text,hint,_,cls='') {
+  const box = document.getElementById('feedbackBox');
+  box.className = 'feedback-box' + (cls ? ' '+cls : '');
+  document.getElementById('feedbackIcon').textContent = icon;
+  document.getElementById('feedbackText').textContent = text;
+  let hintEl = box.querySelector('.feedback-hint');
+  if(!hintEl){ hintEl=document.createElement('div'); hintEl.className='feedback-hint'; box.appendChild(hintEl); }
+  hintEl.textContent = hint;
+}
+
+function renderChips() {
+  document.getElementById('guessesRow').innerHTML = guesses.map(g=>
+    `<span class="guess-chip chip-${g.dir}">${g.val}${g.dir==='high'?'↑':g.dir==='low'?'↓':'✓'}</span>`
+  ).join('');
+}
+
+function updateStats() {
+  document.getElementById('attemptDisplay').textContent = attempts+' / '+maxAttempts;
+  document.getElementById('winsDisplay').textContent = wins;
+  document.getElementById('bestDisplay').textContent = best<999 ? best+' guesses' : '—';
+}
+
+newGame();
+</script>
+</body>
+</html>

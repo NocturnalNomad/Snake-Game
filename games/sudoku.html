@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Sudoku — Nocturnal Nomad</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/cursor.css"/>
+  <style>
+    body { display:flex; flex-direction:column; align-items:center; }
+
+    .sudoku-wrap {
+      display: flex;
+      gap: 30px;
+      align-items: flex-start;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* ── GRID ── */
+    #sudokuGrid {
+      display: grid;
+      grid-template-columns: repeat(9, 48px);
+      grid-template-rows: repeat(9, 48px);
+      gap: 2px;
+      border: 2px solid rgba(0,255,255,0.4);
+      padding: 4px;
+      border-radius: 10px;
+      background: rgba(0,255,255,0.05);
+    }
+
+    .cell {
+      width: 48px; height: 48px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(0,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      cursor: none;
+      border-radius: 4px;
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+      position: relative;
+    }
+
+    /* Box borders */
+    .cell[data-col="2"], .cell[data-col="5"] { border-right: 2px solid rgba(0,255,255,0.35); }
+    .cell[data-row="2"], .cell[data-row="5"] { border-bottom: 2px solid rgba(0,255,255,0.35); }
+
+    .cell.given { color: var(--cyan); text-shadow: 0 0 8px var(--cyan); }
+    .cell.given:hover { background: rgba(0,0,0,0.4); }
+    .cell.selected { background: rgba(0,255,255,0.12); border-color: var(--cyan); }
+    .cell.related  { background: rgba(0,255,255,0.05); }
+    .cell.error    { background: rgba(255,0,80,0.12); border-color: rgba(255,0,80,0.5); color: #ff3366; }
+    .cell:hover:not(.given) { background: rgba(0,255,255,0.08); }
+
+    .cell .notes {
+      position: absolute;
+      inset: 1px;
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      grid-template-rows: repeat(3,1fr);
+    }
+    .note-num {
+      font-size: 0.5rem;
+      color: rgba(0,255,255,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', monospace;
+    }
+
+    /* ── SIDE PANEL ── */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 180px;
+    }
+
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3,52px);
+      gap: 6px;
+    }
+
+    .num-btn {
+      width: 52px; height: 52px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      font-family: 'Orbitron', monospace;
+      font-size: 1.1rem;
+      color: #fff;
+      cursor: none;
+      transition: all 0.15s;
+    }
+    .num-btn:hover { border-color: var(--cyan); color: var(--cyan); text-shadow: 0 0 8px var(--cyan); box-shadow: 0 0 10px rgba(0,255,255,0.15); }
+
+    .erase-btn {
+      grid-column: span 3;
+      background: rgba(255,0,80,0.08);
+      border-color: rgba(255,0,80,0.2);
+      color: #ff3366;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      height: 36px;
+    }
+    .erase-btn:hover { border-color: #ff3366; box-shadow: 0 0 10px rgba(255,0,80,0.15); }
+
+    .note-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      color: var(--dim);
+      cursor: none;
+      padding: 8px 12px;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      background: var(--card-bg);
+      transition: all 0.2s;
+    }
+    .note-toggle.on { color: var(--yellow); border-color: rgba(255,255,0,0.3); background: rgba(255,255,0,0.05); }
+
+    .toggle-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--dim);
+      transition: background 0.2s;
+    }
+    .note-toggle.on .toggle-dot { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+
+    .timer-box {
+      text-align: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 1.4rem;
+      color: var(--cyan);
+      text-shadow: 0 0 10px var(--cyan);
+    }
+
+    .hint-count {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      color: var(--yellow);
+    }
+
+    .win-msg {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      font-family: 'Orbitron', monospace;
+      color: var(--green);
+      text-shadow: 0 0 20px var(--green);
+    }
+
+    @media(max-width:640px){
+      #sudokuGrid { grid-template-columns:repeat(9,36px); grid-template-rows:repeat(9,36px); }
+      .cell { width:36px; height:36px; font-size:0.85rem; }
+      .numpad { grid-template-columns:repeat(3,44px); }
+      .num-btn { width:44px; height:44px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="nav-logo">NOCTURNAL<span style="color:#fff;opacity:0.4">_</span>NOMAD</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Games</a></li>
+    <li><a href="../projects.html">Projects</a></li>
+    <li><a href="../contact.html">Contact</a></li>
+  </ul>
+</nav>
+
+<div class="game-page" style="width:100%;">
+
+  <div style="text-align:center;margin-bottom:20px;">
+    <div class="section-title">Puzzle</div>
+    <div class="section-heading" style="font-size:1.6rem;">SU<span>DOKU</span></div>
+  </div>
+
+  <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;">
+    <button class="btn" onclick="newGame('easy')">EASY</button>
+    <button class="btn" onclick="newGame('medium')">MEDIUM</button>
+    <button class="btn" onclick="newGame('hard')">HARD</button>
+  </div>
+
+  <div class="sudoku-wrap">
+    <div id="sudokuGrid"></div>
+
+    <div class="side-panel">
+      <div>
+        <div class="panel-title" style="font-family:'Orbitron',monospace;font-size:0.55rem;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:6px;">Timer</div>
+        <div class="timer-box" id="timerDisplay">00:00</div>
+      </div>
+
+      <div class="numpad" id="numpad">
+        <button class="num-btn" onclick="inputNum(1)">1</button>
+        <button class="num-btn" onclick="inputNum(2)">2</button>
+        <button class="num-btn" onclick="inputNum(3)">3</button>
+        <button class="num-btn" onclick="inputNum(4)">4</button>
+        <button class="num-btn" onclick="inputNum(5)">5</button>
+        <button class="num-btn" onclick="inputNum(6)">6</button>
+        <button class="num-btn" onclick="inputNum(7)">7</button>
+        <button class="num-btn" onclick="inputNum(8)">8</button>
+        <button class="num-btn" onclick="inputNum(9)">9</button>
+        <button class="num-btn erase-btn" onclick="inputNum(0)">✕ ERASE</button>
+      </div>
+
+      <div class="note-toggle" id="noteToggle" onclick="toggleNotes()">
+        <div class="toggle-dot"></div>
+        NOTE MODE
+      </div>
+
+      <button class="btn" onclick="hint()" style="font-size:0.6rem;">
+        💡 HINT <span class="hint-count" id="hintCount">(3 left)</span>
+      </button>
+
+      <div class="win-msg" id="winMsg">
+        <div style="font-size:2rem;margin-bottom:8px;">✓</div>
+        SOLVED!
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/cursor.js"></script>
+<script>
+// ── Puzzle generation ──
+function generateSolved() {
+  const g = Array.from({length:9},()=>Array(9).fill(0));
+  solve(g);
+  return g;
+}
+
+function solve(g) {
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++) {
+    if(g[r][c]===0){
+      const nums=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);
+      for(let n of nums){
+        if(isValid(g,r,c,n)){ g[r][c]=n; if(solve(g)) return true; g[r][c]=0; }
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
+function isValid(g,r,c,n){
+  for(let i=0;i<9;i++) if(g[r][i]===n||g[i][c]===n) return false;
+  const br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
+  for(let i=0;i<3;i++) for(let j=0;j<3;j++) if(g[br+i][bc+j]===n) return false;
+  return true;
+}
+
+function makePuzzle(diff) {
+  const solved = generateSolved();
+  const puzzle = solved.map(r=>[...r]);
+  const removes = { easy:30, medium:45, hard:55 }[diff];
+  let removed=0;
+  while(removed<removes){
+    const r=Math.floor(Math.random()*9), c=Math.floor(Math.random()*9);
+    if(puzzle[r][c]!==0){ puzzle[r][c]=0; removed++; }
+  }
+  return {puzzle, solved};
+}
+
+// ── State ──
+let grid, solution, selectedR, selectedC, notesMode, hints, timerSec, timerInt, notes;
+
+function newGame(diff='easy') {
+  const {puzzle, solved} = makePuzzle(diff);
+  grid = puzzle.map(r=>[...r]);
+  solution = solved;
+  selectedR = selectedC = -1;
+  notesMode = false;
+  hints = 3;
+  timerSec = 0;
+  notes = Array.from({length:9},()=>Array.from({length:9},()=>new Set()));
+
+  document.getElementById('noteToggle').classList.remove('on');
+  document.getElementById('hintCount').textContent = '(3 left)';
+  document.getElementById('winMsg').style.display = 'none';
+
+  clearInterval(timerInt);
+  timerInt = setInterval(()=>{
+    timerSec++;
+    const m=Math.floor(timerSec/60).toString().padStart(2,'0');
+    const s=(timerSec%60).toString().padStart(2,'0');
+    document.getElementById('timerDisplay').textContent = m+':'+s;
+  },1000);
+
+  render();
+}
+
+function render() {
+  const container = document.getElementById('sudokuGrid');
+  container.innerHTML = '';
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.dataset.row = r;
+    cell.dataset.col = c;
+
+    const isGiven = solution && grid[r][c] !== 0 && grid[r][c] === solution[r][c];
+    const original = /* check if it was always given */ true;
+
+    if(r===selectedR && c===selectedC) cell.classList.add('selected');
+    else if(selectedR>=0 && (r===selectedR||c===selectedC||
+      (Math.floor(r/3)===Math.floor(selectedR/3)&&Math.floor(c/3)===Math.floor(selectedC/3))))
+      cell.classList.add('related');
+
+    if(grid[r][c]!==0){
+      // Check error
+      const g2=grid.map(x=>[...x]); g2[r][c]=0;
+      if(!isValid(g2,r,c,grid[r][c]) && solution[r][c]!==grid[r][c]){
+        cell.classList.add('error');
+      }
+
+      if(solution && grid[r][c]===solution[r][c] && isOriginalGiven(r,c)){
+        cell.classList.add('given');
+      }
+      cell.textContent = grid[r][c];
+    } else if(notes[r][c].size>0) {
+      const noteDiv = document.createElement('div');
+      noteDiv.className = 'notes';
+      for(let n=1;n<=9;n++){
+        const nd=document.createElement('div');
+        nd.className='note-num';
+        nd.textContent = notes[r][c].has(n)?n:'';
+        noteDiv.appendChild(nd);
+      }
+      cell.appendChild(noteDiv);
+    }
+
+    cell.onclick = () => selectCell(r,c);
+    container.appendChild(cell);
+  }
+}
+
+// Track original givens
+let givenMask;
+function isOriginalGiven(r,c){ return givenMask && givenMask[r][c]; }
+
+function selectCell(r,c){ selectedR=r; selectedC=c; render(); }
+
+function inputNum(n) {
+  if(selectedR<0) return;
+  if(isOriginalGiven(selectedR,selectedC)) return;
+  if(notesMode && n!==0){
+    if(notes[selectedR][selectedC].has(n)) notes[selectedR][selectedC].delete(n);
+    else notes[selectedR][selectedC].add(n);
+  } else {
+    grid[selectedR][selectedC]=n;
+    if(n!==0) notes[selectedR][selectedC].clear();
+    checkWin();
+  }
+  render();
+}
+
+function toggleNotes(){
+  notesMode=!notesMode;
+  document.getElementById('noteToggle').classList.toggle('on',notesMode);
+}
+
+function hint(){
+  if(hints<=0) return;
+  // Find an empty cell and fill it
+  const empties=[];
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(grid[r][c]===0) empties.push([r,c]);
+  if(!empties.length) return;
+  const [r,c]=empties[Math.floor(Math.random()*empties.length)];
+  grid[r][c]=solution[r][c];
+  hints--;
+  document.getElementById('hintCount').textContent=`(${hints} left)`;
+  render();
+  checkWin();
+}
+
+function checkWin(){
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(grid[r][c]!==solution[r][c]) return;
+  clearInterval(timerInt);
+  document.getElementById('winMsg').style.display='block';
+}
+
+// Keyboard input
+document.addEventListener('keydown',e=>{
+  if(e.key>='1'&&e.key<='9') inputNum(parseInt(e.key));
+  else if(e.key==='Backspace'||e.key==='Delete'||e.key==='0') inputNum(0);
+  else if(e.key==='ArrowUp'&&selectedR>0){selectedR--;render();}
+  else if(e.key==='ArrowDown'&&selectedR<8){selectedR++;render();}
+  else if(e.key==='ArrowLeft'&&selectedC>0){selectedC--;render();}
+  else if(e.key==='ArrowRight'&&selectedC<8){selectedC++;render();}
+});
+
+// Override render to track givens
+const _origNewGame = newGame;
+function newGame(diff='easy') {
+  const {puzzle, solved} = makePuzzle(diff);
+  givenMask = puzzle.map(r=>r.map(v=>v!==0));
+  grid = puzzle.map(r=>[...r]);
+  solution = solved;
+  selectedR = selectedC = -1;
+  notesMode = false;
+  hints = 3;
+  timerSec = 0;
+  notes = Array.from({length:9},()=>Array.from({length:9},()=>new Set()));
+  document.getElementById('noteToggle').classList.remove('on');
+  document.getElementById('hintCount').textContent = '(3 left)';
+  document.getElementById('winMsg').style.display = 'none';
+  clearInterval(timerInt);
+  timerInt = setInterval(()=>{
+    timerSec++;
+    const m=Math.floor(timerSec/60).toString().padStart(2,'0');
+    const s=(timerSec%60).toString().padStart(2,'0');
+    document.getElementById('timerDisplay').textContent = m+':'+s;
+  },1000);
+  render();
+}
+
+newGame('easy');
+</script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Wordle — Nocturnal Nomad</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/cursor.css"/>
+  <style>
+    body { display:flex; flex-direction:column; align-items:center; }
+
+    #grid {
+      display:grid;
+      grid-template-rows:repeat(6,1fr);
+      gap:6px;
+      margin-bottom:24px;
+      margin-top:20px;
+    }
+
+    .grid-row { display:grid; grid-template-columns:repeat(5,56px); gap:6px; }
+
+    .tile {
+      width:56px; height:56px;
+      background:var(--card-bg);
+      border:1px solid var(--card-border);
+      border-radius:6px;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Orbitron',monospace;
+      font-size:1.3rem;
+      font-weight:900;
+      color:#fff;
+      transition:all 0.1s;
+    }
+
+    .tile.filled { border-color:rgba(0,255,255,0.4); transform:scale(1.05); }
+    .tile.correct { background:rgba(0,255,136,0.2); border-color:var(--green); color:var(--green); text-shadow:0 0 10px var(--green); }
+    .tile.present { background:rgba(255,200,0,0.15); border-color:rgba(255,200,0,0.5); color:#ffcc00; text-shadow:0 0 10px #ffcc00; }
+    .tile.absent  { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08); color:var(--dim); }
+
+    .tile.flip { animation:flip 0.5s ease forwards; }
+    @keyframes flip {
+      0%{transform:rotateX(0)} 50%{transform:rotateX(-90deg)} 100%{transform:rotateX(0)}
+    }
+
+    .tile.shake { animation:shake 0.4s ease; }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)}
+    }
+
+    /* Keyboard */
+    .keyboard { display:flex; flex-direction:column; gap:6px; }
+    .kb-row { display:flex; gap:5px; justify-content:center; }
+    .kb-key {
+      height:48px; min-width:36px; padding:0 8px;
+      background:var(--card-bg);
+      border:1px solid var(--card-border);
+      border-radius:6px;
+      font-family:'Orbitron',monospace;
+      font-size:0.7rem;
+      font-weight:700;
+      color:#fff;
+      cursor:none;
+      transition:all 0.2s;
+    }
+    .kb-key:hover:not(:disabled) { border-color:var(--cyan); color:var(--cyan); }
+    .kb-key.wide { min-width:56px; font-size:0.55rem; letter-spacing:1px; }
+    .kb-key.correct { background:rgba(0,255,136,0.2); border-color:var(--green); color:var(--green); }
+    .kb-key.present { background:rgba(255,200,0,0.15); border-color:rgba(255,200,0,0.4); color:#ffcc00; }
+    .kb-key.absent  { background:rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.06); color:var(--dim); }
+
+    .message {
+      font-family:'Orbitron',monospace;
+      font-size:0.8rem;
+      letter-spacing:3px;
+      text-align:center;
+      min-height:24px;
+      margin-bottom:12px;
+    }
+    .message.error { color:#ff3366; }
+    .message.win   { color:var(--green); text-shadow:0 0 14px var(--green); }
+    .message.lose  { color:var(--magenta); }
+
+    .stats-row { display:flex; gap:12px; justify-content:center; margin-bottom:20px; }
+    .mini { background:var(--card-bg); border:1px solid var(--card-border); border-radius:8px; padding:10px 16px; text-align:center; }
+    .mini .l { font-family:'Orbitron',monospace; font-size:0.5rem; letter-spacing:3px; color:var(--dim); }
+    .mini .v { font-family:'Orbitron',monospace; font-size:1.1rem; color:var(--cyan); text-shadow:0 0 8px var(--cyan); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="nav-logo">NOCTURNAL<span style="color:#fff;opacity:0.4">_</span>NOMAD</a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Games</a></li>
+    <li><a href="../projects.html">Projects</a></li>
+    <li><a href="../contact.html">Contact</a></li>
+  </ul>
+</nav>
+
+<div class="game-page">
+  <div style="text-align:center;margin-bottom:8px;">
+    <div class="section-heading" style="font-size:1.6rem;">WOR<span>DLE</span></div>
+    <div style="font-size:0.75rem;color:var(--dim);letter-spacing:2px;">Guess the 5-letter word in 6 tries</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="mini"><div class="l">PLAYED</div><div class="v" id="sPlayed">0</div></div>
+    <div class="mini"><div class="l">WON</div><div class="v" id="sWon">0</div></div>
+    <div class="mini"><div class="l">STREAK</div><div class="v" id="sStreak">0</div></div>
+  </div>
+
+  <div class="message" id="message"></div>
+  <div id="grid"></div>
+
+  <div class="keyboard">
+    <div class="kb-row" id="row1"></div>
+    <div class="kb-row" id="row2"></div>
+    <div class="kb-row" id="row3"></div>
+  </div>
+
+  <button class="btn" onclick="newGame()" style="margin-top:20px;width:300px;">NEW WORD</button>
+</div>
+
+<script src="../js/cursor.js"></script>
+<script>
+const WORDS = ['CRANE','BLAST','FLINT','GROVE','PIXEL','CYBER','NIGHT','STORM','FORGE','BLAZE',
+ 'PROXY','GHOST','SHARD','NEXUS','VAULT','SURGE','PHASE','CHORD','SPIKE','PRISM',
+ 'FLAME','SHIFT','SQUAD','GLYPH','BRISK','CRISP','CRYPT','DWARF','EPOCH','FACET',
+ 'GLOOM','HAVOC','INDEX','JOUST','KNACK','LATCH','MAUVE','NERVE','OXIDE','PLUSH',
+ 'QUAFF','ROGUE','SCALD','TRAWL','ULTRA','VISOR','WALTZ','XENON','YACHT','ZONAL',
+ 'STACK','FETCH','QUERY','PARSE','DEBUG','LINUX','ARRAY','BYTES','CACHE','DELTA'];
+
+let target, guesses, current, gameOver, stats;
+stats = JSON.parse(localStorage.getItem('wordle_stats')||'{"played":0,"won":0,"streak":0}');
+
+const KB_ROWS = ['QWERTYUIOP','ASDFGHJKL','⌫ZXCVBNM↵'];
+
+function newGame() {
+  target = WORDS[Math.floor(Math.random()*WORDS.length)];
+  guesses = [];
+  current = '';
+  gameOver = false;
+  setMessage('');
+  renderGrid();
+  renderKeyboard();
+  updateStats();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = Array.from({length:6},(_,r)=>{
+    const guess = guesses[r];
+    return `<div class="grid-row">${Array.from({length:5},(_,c)=>{
+      if(guess){
+        const cls = guess.result[c];
+        return `<div class="tile ${cls}">${guess.letters[c]}</div>`;
+      }
+      if(r===guesses.length){
+        return `<div class="tile ${c<current.length?'filled':''}">${current[c]||''}</div>`;
+      }
+      return '<div class="tile"></div>';
+    }).join('')}</div>`;
+  }).join('');
+}
+
+function renderKeyboard() {
+  const kbStates = {};
+  guesses.forEach(g=>{
+    g.letters.forEach((l,i)=>{
+      const cur=kbStates[l];
+      const r=g.result[i];
+      if(!cur||cur==='absent'||(cur==='present'&&r==='correct')) kbStates[l]=r;
+    });
+  });
+  KB_ROWS.forEach((row,ri)=>{
+    document.getElementById('row'+(ri+1)).innerHTML=[...row].map(k=>{
+      if(k==='⌫') return `<button class="kb-key wide" onclick="keyPress('BACK')">DEL</button>`;
+      if(k==='↵') return `<button class="kb-key wide" onclick="keyPress('ENTER')">ENTER</button>`;
+      const cls=kbStates[k]||'';
+      return `<button class="kb-key ${cls}" onclick="keyPress('${k}')">${k}</button>`;
+    }).join('');
+  });
+}
+
+function keyPress(key) {
+  if(gameOver) return;
+  if(key==='BACK'){ current=current.slice(0,-1); renderGrid(); return; }
+  if(key==='ENTER'){ submitGuess(); return; }
+  if(current.length<5) { current+=key; renderGrid(); }
+}
+
+function submitGuess() {
+  if(current.length<5){ shakeRow(guesses.length); setMessage('Not enough letters','error'); return; }
+
+  const letters=[...current];
+  const result=Array(5).fill('absent');
+  const targetArr=[...target];
+  const used=Array(5).fill(false);
+
+  // Correct pass
+  letters.forEach((l,i)=>{ if(l===targetArr[i]){ result[i]='correct'; used[i]=true; } });
+  // Present pass
+  letters.forEach((l,i)=>{
+    if(result[i]==='correct') return;
+    const idx=targetArr.findIndex((t,j)=>t===l&&!used[j]&&result[j]!=='correct');
+    if(idx>=0){ result[i]='present'; used[idx]=true; }
+  });
+
+  guesses.push({letters, result});
+  current='';
+  renderGrid();
+
+  // Animate flip
+  const rows=document.querySelectorAll('.grid-row');
+  const row=rows[guesses.length-1];
+  const tiles=[...row.querySelectorAll('.tile')];
+  tiles.forEach((t,i)=>setTimeout(()=>t.classList.add('flip'),i*80));
+
+  setTimeout(()=>{
+    renderKeyboard();
+    if(result.every(r=>r==='correct')){
+      gameOver=true;
+      stats.played++; stats.won++; stats.streak++;
+      localStorage.setItem('wordle_stats',JSON.stringify(stats));
+      setMessage(['Genius!','Magnificent!','Impressive!','Splendid!','Great!','Phew!'][guesses.length-1]||'Yes!','win');
+      updateStats();
+    } else if(guesses.length>=6){
+      gameOver=true;
+      stats.played++; stats.streak=0;
+      localStorage.setItem('wordle_stats',JSON.stringify(stats));
+      setMessage('The word was: '+target,'lose');
+      updateStats();
+    }
+  },5*80+300);
+}
+
+function shakeRow(r){
+  const row=document.querySelectorAll('.grid-row')[r];
+  [...row.querySelectorAll('.tile')].forEach(t=>{
+    t.classList.add('shake');
+    setTimeout(()=>t.classList.remove('shake'),400);
+  });
+}
+
+function setMessage(msg,cls=''){
+  const el=document.getElementById('message');
+  el.textContent=msg;
+  el.className='message'+(cls?' '+cls:'');
+}
+
+function updateStats(){
+  document.getElementById('sPlayed').textContent=stats.played;
+  document.getElementById('sWon').textContent=stats.won;
+  document.getElementById('sStreak').textContent=stats.streak;
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(e.key==='Backspace') keyPress('BACK');
+  else if(e.key==='Enter') keyPress('ENTER');
+  else if(e.key.match(/^[a-zA-Z]$/)) keyPress(e.key.toUpperCase());
+});
+
+newGame();
+</script>
+</body>
+</html>
