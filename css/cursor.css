@@ -1,0 +1,60 @@
+/* ── CUSTOM CURSOR ── */
+
+* { cursor: none !important; }
+
+.cursor-dot {
+  position: fixed;
+  top: 0; left: 0;
+  width: 8px; height: 8px;
+  background: #00ffff;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 10px #00ffff, 0 0 20px rgba(0,255,255,0.5);
+  transition: width 0.15s, height 0.15s, background 0.15s;
+}
+
+.cursor-ring {
+  position: fixed;
+  top: 0; left: 0;
+  width: 36px; height: 36px;
+  border: 1px solid rgba(0, 255, 255, 0.6);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99998;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, border-color 0.2s, opacity 0.2s;
+}
+
+.cursor-ring::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,255,255,0.15);
+}
+
+/* Hover state on clickable things */
+body.cursor-hover .cursor-dot {
+  width: 6px; height: 6px;
+  background: #ff00ff;
+  box-shadow: 0 0 10px #ff00ff, 0 0 24px rgba(255,0,255,0.5);
+}
+
+body.cursor-hover .cursor-ring {
+  width: 52px; height: 52px;
+  border-color: rgba(255, 0, 255, 0.5);
+}
+
+/* Click state */
+body.cursor-click .cursor-dot {
+  width: 4px; height: 4px;
+  background: #ffffff;
+  box-shadow: 0 0 16px #fff;
+}
+
+body.cursor-click .cursor-ring {
+  width: 20px; height: 20px;
+  opacity: 0.6;
+}
